@@ -21,10 +21,13 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        # pywebview is desktop-only and not needed by the offline suite
+        # pywebview is Windows-desktop only; the offline suite doesn't need it.
+        # Filtering into a file (not a shell substitution) keeps inline comments
+        # and version specifiers intact.
         run: |
           python -m pip install --upgrade pip
-          pip install $(grep -v -E '^(pywebview|#|$)' requirements.txt) pytest
+          grep -v '^pywebview' requirements.txt > ci-requirements.txt
+          pip install -r ci-requirements.txt
 
       - name: Run tests
         run: python -m pytest tests/ -v
