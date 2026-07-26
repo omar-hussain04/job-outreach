@@ -1,0 +1,1429 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نظام إرسال إيميلات التقديم</title>
+<style>
+:root {
+  --ground:      #EAEEF2;
+  --panel:       #FFFFFF;
+  --sunk:        #DDE3EA;
+  --ink:         #16202B;
+  --ink-soft:    #5A6875;
+  --ink-faint:   #8492A0;
+  --rule:        #CCD5DE;
+  --accent:      #1D4E89;
+  --accent-on:   #FFFFFF;
+  --accent-soft: #DBE6F3;
+  --good:        #1B7A4B;
+  --good-soft:   #DAF0E4;
+  --warn:        #9A6206;
+  --warn-soft:   #FBEED2;
+  --bad:         #B3261E;
+  --bad-soft:    #FADEDC;
+  --shadow: 0 1px 2px rgba(22,32,43,.07), 0 6px 18px -10px rgba(22,32,43,.25);
+  --sans: "Segoe UI", -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: "Cascadia Mono", Consolas, "Courier New", monospace;
+  --r: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground:#0F151B; --panel:#161E26; --sunk:#0B1116;
+    --ink:#E4EAF0; --ink-soft:#95A4B2; --ink-faint:#6C7B89;
+    --rule:#26323D; --accent:#6FA8E8; --accent-on:#0B1116; --accent-soft:#1A2B3D;
+    --good:#5FCB94; --good-soft:#12301F; --warn:#E0B25C; --warn-soft:#332611;
+    --bad:#F2938C; --bad-soft:#3A1A17;
+    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 26px -12px rgba(0,0,0,.7);
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--ground); color: var(--ink);
+  font-family: var(--sans); font-size: 14px; line-height: 1.6;
+  overflow: hidden;
+}
+button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+
+/* ============ الهيكل ============ */
+.shell { display: grid; grid-template-columns: 208px 1fr; height: 100vh; }
+nav {
+  background: var(--sunk); border-inline-start: 1px solid var(--rule);
+  display: flex; flex-direction: column; padding: 16px 12px; gap: 4px;
+}
+.brand { padding: 4px 10px 16px; }
+.brand h1 { font-size: 14px; margin: 0; font-weight: 600; letter-spacing: -.01em; }
+.brand p { margin: 2px 0 0; font-size: 11.5px; color: var(--ink-faint); }
+nav button {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 9px 11px; border: 0; border-radius: 6px; background: transparent;
+  color: var(--ink-soft); cursor: pointer; text-align: start; font-size: 13.5px;
+  transition: background .14s, color .14s;
+}
+nav button:hover { background: var(--ground); color: var(--ink); }
+nav button.on { background: var(--accent); color: var(--accent-on); font-weight: 500; }
+nav button .badge {
+  margin-inline-start: auto; font-size: 11px; font-variant-numeric: tabular-nums;
+  background: var(--ground); color: var(--ink-soft);
+  border-radius: 999px; padding: 1px 7px; min-width: 22px; text-align: center;
+}
+nav button.on .badge { background: rgba(255,255,255,.22); color: var(--accent-on); }
+nav .spacer { flex: 1; }
+
+main { overflow-y: auto; padding: 26px 30px 60px; }
+.view { display: none; }
+.view.on { display: block; animation: rise .18s ease; }
+@keyframes rise { from { opacity: 0; transform: translateY(4px); } }
+h2 { font-size: 20px; margin: 0 0 4px; font-weight: 600; letter-spacing: -.015em; }
+.sub { color: var(--ink-soft); margin: 0 0 22px; font-size: 13.5px; max-width: 70ch; }
+
+/* ============ عناصر ============ */
+.card {
+  background: var(--panel); border: 1px solid var(--rule);
+  border-radius: var(--r); padding: 18px; box-shadow: var(--shadow);
+}
+.grid { display: grid; gap: 14px; }
+.g2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.g4 { grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sp { margin-inline-start: auto; }
+
+.stat .n {
+  font-size: 27px; font-weight: 600; letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums; line-height: 1.15;
+}
+.stat .l { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
+.stat.hi .n { color: var(--accent); }
+.stat.gd .n { color: var(--good); }
+.stat.bd .n { color: var(--bad); }
+
+.check { display: flex; align-items: center; gap: 10px; padding: 9px 0; }
+.check + .check { border-top: 1px solid var(--rule); }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.dot.ok { background: var(--good); } .dot.no { background: var(--bad); }
+.check .lab { font-weight: 500; }
+.check .det { color: var(--ink-soft); margin-inline-start: auto; font-size: 13px; }
+
+button.b {
+  border: 1px solid var(--rule); background: var(--panel); color: var(--ink);
+  border-radius: 6px; padding: 8px 15px; cursor: pointer; font-size: 13.5px;
+  transition: background .14s, border-color .14s;
+}
+button.b:hover:not(:disabled) { background: var(--sunk); }
+button.b.pri { background: var(--accent); border-color: var(--accent); color: var(--accent-on); font-weight: 500; }
+button.b.pri:hover:not(:disabled) { filter: brightness(1.1); }
+button.b.dgr { color: var(--bad); border-color: var(--bad); }
+button.b:disabled { opacity: .45; cursor: not-allowed; }
+button.b:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px;
+}
+
+input[type=text], input[type=number], select, textarea {
+  background: var(--panel); border: 1px solid var(--rule);
+  border-radius: 6px; padding: 7px 10px; width: 100%;
+}
+textarea { resize: vertical; min-height: 74px; line-height: 1.65; }
+label.f { display: block; margin-bottom: 12px; }
+label.f > span { display: block; font-size: 12.5px; color: var(--ink-soft); margin-bottom: 4px; }
+.hint { font-size: 12px; color: var(--ink-faint); margin-top: 3px; }
+
+.tag {
+  display: inline-block; font-size: 11.5px; padding: 1px 8px;
+  border-radius: 999px; background: var(--sunk); color: var(--ink-soft);
+}
+.tag.ok { background: var(--good-soft); color: var(--good); }
+.tag.wr { background: var(--warn-soft); color: var(--warn); }
+.tag.bd { background: var(--bad-soft); color: var(--bad); }
+
+/* ============ جداول ============ */
+.tw { overflow: auto; max-height: 60vh; border: 1px solid var(--rule); border-radius: var(--r); background: var(--panel); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th {
+  position: sticky; top: 0; z-index: 2; background: var(--sunk);
+  text-align: start; font-weight: 600; font-size: 11.5px; color: var(--ink-soft);
+  padding: 9px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap;
+}
+td { padding: 5px 8px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: var(--sunk); }
+td input[type=text], td select { border-color: transparent; background: transparent; padding: 5px 7px; }
+td input[type=text]:hover, td select:hover { border-color: var(--rule); }
+td input[type=text]:focus, td select:focus { background: var(--panel); border-color: var(--accent); }
+tr.done td:first-child { box-shadow: inset 3px 0 0 var(--good); }
+tr.off { opacity: .5; }
+
+/* ============ السجل ============ */
+.log {
+  background: var(--sunk); border: 1px solid var(--rule); border-radius: var(--r);
+  padding: 12px 14px; height: 320px; overflow-y: auto;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.85; direction: ltr;
+}
+.log .ln { display: flex; gap: 10px; }
+.log .t { color: var(--ink-faint); flex: none; font-variant-numeric: tabular-nums; }
+.log .m { white-space: pre-wrap; word-break: break-word; }
+.log .ok .m { color: var(--good); }
+.log .err .m { color: var(--bad); }
+.log .dim .m { color: var(--ink-soft); }
+.log .empty { color: var(--ink-faint); font-family: var(--sans); direction: rtl; }
+
+.bar { height: 5px; background: var(--sunk); border-radius: 999px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+
+/* ============ نافذة تأكيد ============ */
+.veil {
+  position: fixed; inset: 0; background: rgba(8,12,16,.55);
+  display: none; align-items: center; justify-content: center; padding: 24px; z-index: 50;
+}
+.veil.on { display: flex; }
+.modal {
+  background: var(--panel); border-radius: 10px; padding: 22px;
+  max-width: 560px; width: 100%; max-height: 84vh; overflow-y: auto;
+  box-shadow: 0 24px 60px -12px rgba(0,0,0,.5);
+}
+.modal h3 { margin: 0 0 6px; font-size: 17px; }
+
+/* ============ إشعار ============ */
+#toast {
+  position: fixed; inset-block-end: 20px; inset-inline-start: 20px; z-index: 60;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  background: var(--panel); border: 1px solid var(--rule); border-inline-start: 3px solid var(--accent);
+  border-radius: 6px; padding: 10px 14px; box-shadow: var(--shadow);
+  max-width: 420px; animation: rise .16s ease;
+}
+.toast.ok { border-inline-start-color: var(--good); }
+.toast.bd { border-inline-start-color: var(--bad); }
+
+iframe.mail { width: 100%; height: 520px; border: 1px solid var(--rule); border-radius: var(--r); background: #fff; }
+.mono { font-family: var(--mono); font-size: 12.5px; }
+.muted { color: var(--ink-soft); }
+
+/* ============ بطاقات الخطوة التالية ============ */
+.acts { display: grid; gap: 10px; }
+.act {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: var(--panel); border: 1px solid var(--rule);
+  border-inline-start: 3px solid var(--ink-faint);
+  border-radius: var(--r); padding: 13px 15px;
+}
+.act.primary { border-inline-start-color: var(--accent); }
+.act.good    { border-inline-start-color: var(--good); }
+.act.warn    { border-inline-start-color: var(--warn); }
+.act.info    { border-inline-start-color: var(--ink-faint); }
+.act .txt { flex: 1; min-width: 0; }
+.act .ttl { font-weight: 600; margin-bottom: 2px; }
+.act .bdy { font-size: 13px; color: var(--ink-soft); }
+.act button { flex: none; align-self: center; }
+
+/* ============ لوح تفاصيل الشركة ============ */
+.drawer {
+  /* مثبّت على الحافة اليمنى (بداية السطر في RTL)، ويُخفى بإزاحته خارجها
+     إلى اليمين (+100%). visibility تمنعه من اعتراض النقرات وهو مخفي. */
+  position: fixed; inset-block: 0; right: 0;
+  width: min(760px, 92vw); background: var(--panel);
+  border-inline-end: 1px solid var(--rule);
+  box-shadow: 24px 0 60px -20px rgba(0,0,0,.4);
+  z-index: 45; display: flex; flex-direction: column;
+  transform: translateX(100%); visibility: hidden;
+  transition: transform .22s cubic-bezier(.4,0,.2,1), visibility 0s .22s;
+}
+.drawer.on { transform: none; visibility: visible; transition-delay: 0s; }
+.drawer header {
+  padding: 16px 20px; border-bottom: 1px solid var(--rule);
+  display: flex; align-items: center; gap: 12px;
+}
+.drawer header .who { flex: 1; min-width: 0; }
+.drawer header .who b { display: block; font-size: 15.5px; }
+.drawer header .who span { font-size: 12.5px; color: var(--ink-soft); }
+.drawer .body { flex: 1; overflow-y: auto; padding: 18px 20px; }
+.drawer footer {
+  padding: 13px 20px; border-top: 1px solid var(--rule);
+  display: flex; gap: 9px; align-items: center; background: var(--sunk);
+}
+.xbtn {
+  border: 0; background: transparent; color: var(--ink-soft);
+  font-size: 22px; line-height: 1; cursor: pointer; padding: 4px 9px;
+  border-radius: 6px;
+}
+.xbtn:hover { background: var(--sunk); color: var(--ink); }
+.scrim {
+  position: fixed; inset: 0; background: rgba(8,12,16,.4);
+  z-index: 44; opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.scrim.on { opacity: 1; pointer-events: auto; }
+
+/* ============ تفاصيل ============ */
+.dirty-dot {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--warn); margin-inline-end: 6px; vertical-align: middle;
+}
+input.bad { border-color: var(--bad) !important; background: var(--bad-soft) !important; }
+tr.sel { background: var(--accent-soft) !important; }
+td.pick { text-align: center; width: 34px; }
+.kbd {
+  font-family: var(--mono); font-size: 11px; border: 1px solid var(--rule);
+  border-bottom-width: 2px; border-radius: 4px; padding: 0 5px;
+  color: var(--ink-soft); background: var(--panel);
+}
+.bulk {
+  display: none; align-items: center; gap: 10px; padding: 9px 13px;
+  background: var(--accent-soft); border: 1px solid var(--accent);
+  border-radius: var(--r); margin-bottom: 10px;
+}
+.bulk.on { display: flex; }
+.empty-state { text-align: center; padding: 40px 20px; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <nav>
+    <div class="brand">
+      <h1>إيميلات التقديم</h1>
+      <p id="brandOwner">—</p>
+    </div>
+    <button data-v="home" class="on">الحالة</button>
+    <button data-v="companies">الشركات <span class="badge" id="nCompanies">—</span></button>
+    <button data-v="preview">معاينة الرسالة</button>
+    <button data-v="send">الإرسال <span class="badge" id="nRemaining">—</span></button>
+    <button data-v="replies">الردود <span class="badge" id="nReplies">—</span></button>
+    <button data-v="history">السجل</button>
+    <div class="spacer"></div>
+    <button data-v="settings">الإعدادات</button>
+    <button id="themeBtn" title="تبديل الوضع الليلي">الوضع الليلي</button>
+  </nav>
+
+  <main>
+    <!-- ══════════ الحالة ══════════ -->
+    <section class="view on" id="v-home">
+      <h2>الحالة</h2>
+      <p class="sub">ملخّص جاهزية النظام وتقدّم الحملة.</p>
+
+      <div class="grid g4" style="margin-bottom:16px">
+        <div class="card stat"><div class="n" id="sTotal">—</div><div class="l">شركة في القائمة</div></div>
+        <div class="card stat hi"><div class="n" id="sSent">—</div><div class="l">رسالة أولى أُرسلت</div></div>
+        <div class="card stat"><div class="n" id="sLeft">—</div><div class="l">متبقٍ</div></div>
+        <div class="card stat gd"><div class="n" id="sReplies">—</div><div class="l">ردّ وصل</div></div>
+      </div>
+
+      <h3 style="font-size:15px;margin:0 0 10px">الخطوة التالية</h3>
+      <div class="acts" id="acts" style="margin-bottom:18px"></div>
+
+      <div class="grid g2">
+        <div class="card">
+          <div class="row" style="margin-bottom:6px">
+            <strong>الجاهزية</strong>
+            <span class="sp" id="readyTag"></span>
+          </div>
+          <div id="checks"></div>
+          <div class="hint" style="margin-top:12px" id="homeHint"></div>
+        </div>
+
+        <div class="card">
+          <strong>إجراءات</strong>
+          <div class="grid" style="margin-top:12px">
+            <button class="b" data-go="preview">عاين الرسالة</button>
+            <button class="b" id="qReplies">افحص الردود الآن</button>
+            <button class="b" id="qAuth">أعد الاتصال بجيميل</button>
+          </div>
+          <div class="hint" style="margin-top:14px">
+            اختصارات: <span class="kbd">Ctrl</span>+<span class="kbd">1..7</span> للتنقّل ·
+            <span class="kbd">Ctrl</span>+<span class="kbd">S</span> حفظ ·
+            <span class="kbd">/</span> بحث · <span class="kbd">Esc</span> إغلاق
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ الشركات ══════════ -->
+    <section class="view" id="v-companies">
+      <h2>الشركات</h2>
+      <p class="sub">اسم الشركة يظهر داخل نص الرسالة — راجعه قبل الإرسال. عمود «ملاحظة مخصصة» هو أقوى ما يميّز رسالتك عن غيرها.</p>
+
+      <div class="row" style="margin-bottom:12px">
+        <input type="text" id="cSearch" placeholder="بحث بالاسم أو الإيميل…  (/)" style="max-width:250px">
+        <select id="cFilter" style="max-width:190px">
+          <option value="all">الكل</option>
+          <option value="pending">لم تُرسل بعد</option>
+          <option value="nonote">بلا ملاحظة مخصصة</option>
+          <option value="sent">أُرسلت</option>
+          <option value="bounced">ارتدّت — عنوان غير صالح</option>
+          <option value="skip">متجاوَزة</option>
+          <option value="replied">ردّت</option>
+        </select>
+        <span class="sp"></span>
+        <button class="b" id="cAdd">إضافة شركة</button>
+        <button class="b" id="cImport">لصق قائمة</button>
+        <button class="b" id="cDns">افحص النطاقات</button>
+        <button class="b pri" id="cSave">حفظ</button>
+      </div>
+
+      <div class="bulk" id="cBulk">
+        <strong id="cBulkN">0 محدّدة</strong>
+        <span class="sp"></span>
+        <button class="b" data-bulk="ar">اجعلها عربية</button>
+        <button class="b" data-bulk="en">اجعلها إنجليزية</button>
+        <button class="b" data-bulk="both">اجعلها ثنائية اللغة</button>
+        <button class="b" data-bulk="skip">تجاوزها</button>
+        <button class="b" data-bulk="unskip">ألغِ التجاوز</button>
+        <button class="b dgr" data-bulk="del">حذف</button>
+      </div>
+
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th class="pick"><input type="checkbox" id="cAll" title="تحديد الكل"></th>
+            <th style="width:22%">الشركة</th><th style="width:22%">الإيميل</th>
+            <th style="width:8%">اللغة</th><th style="width:28%">ملاحظة مخصصة</th>
+            <th style="width:10%">الحالة</th><th style="width:8%"></th>
+          </tr></thead>
+          <tbody id="cBody"></tbody>
+        </table>
+      </div>
+      <div class="hint" id="cInfo" style="margin-top:8px"></div>
+    </section>
+
+    <!-- ══════════ المعاينة ══════════ -->
+    <section class="view" id="v-preview">
+      <h2>معاينة الرسالة</h2>
+      <p class="sub">هذا ما سيصل إلى الشركة فعلاً — نفس القالب الذي يستخدمه الإرسال.</p>
+
+      <div class="row" style="margin-bottom:14px">
+        <select id="pCompany" style="max-width:320px"></select>
+        <select id="pStage" style="max-width:160px">
+          <option value="initial">الرسالة الأولى</option>
+          <option value="followup">رسالة المتابعة</option>
+        </select>
+        <button class="b" id="pRefresh">تحديث</button>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="row" style="font-size:13px">
+          <span class="muted">إلى:</span> <span class="mono" id="pTo"></span>
+          <span class="sp"></span><span id="pAttach"></span>
+        </div>
+        <div style="margin-top:8px; font-weight:600; font-size:15.5px" id="pSubject"></div>
+      </div>
+      <iframe class="mail" id="pFrame" sandbox=""></iframe>
+    </section>
+
+    <!-- ══════════ الإرسال ══════════ -->
+    <section class="view" id="v-send">
+      <h2>الإرسال</h2>
+      <p class="sub">النظام يرسل ببطء وفواصل عشوائية، ولا يرسل لشركة مرتين أبداً.</p>
+
+      <div class="grid g2" style="margin-bottom:16px">
+        <div class="card">
+          <label class="f"><span>نوع الرسالة</span>
+            <select id="sStage">
+              <option value="initial">الرسالة الأولى</option>
+              <option value="followup">رسالة المتابعة (لمن لم يردّ)</option>
+            </select>
+          </label>
+          <label class="f"><span>الوضع</span>
+            <select id="sMode">
+              <option value="draft">مسودة في جيميل (آمن — للمراجعة)</option>
+              <option value="send">إرسال فعلي</option>
+            </select>
+          </label>
+          <label class="f"><span>الحد الأقصى في هذه الجلسة</span>
+            <input type="number" id="sLimit" min="1" max="200" value="10">
+            <div class="hint">اتركه فارغاً لإرسال كل المتبقي حتى الحد اليومي.</div>
+          </label>
+          <label class="row" style="gap:8px; cursor:pointer">
+            <input type="checkbox" id="sIgnore" style="width:auto">
+            <span>تجاهل قيود الأيام والساعات</span>
+          </label>
+        </div>
+
+        <div class="card">
+          <strong>قبل أن تبدأ</strong>
+          <div id="sInfo" style="margin-top:10px"></div>
+          <div class="row" style="margin-top:16px">
+            <button class="b pri" id="sStart">مراجعة ثم البدء</button>
+            <button class="b dgr" id="sStop" disabled>إيقاف</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="margin-bottom:10px">
+          <strong>سجل مباشر</strong>
+          <span class="sp mono muted" id="sProgress"></span>
+        </div>
+        <div class="bar" style="margin-bottom:10px"><i id="sBar"></i></div>
+        <div class="log" id="sLog"><div class="empty">لم تبدأ أي حملة بعد.</div></div>
+      </div>
+    </section>
+
+    <!-- ══════════ الردود والمزامنة ══════════ -->
+    <section class="view" id="v-replies">
+      <h2>الردود والمزامنة</h2>
+      <p class="sub">مزامنة واحدة تفعل شيئين: تكشف من ردّ عليك (ويُستثنى من المتابعة تلقائياً)،
+        وتتحقق من المسودات — ما أرسلتَه يدوياً من جيميل يتحدّث وضعه هنا إلى «أُرسلت يدوياً».</p>
+      <div class="row" style="margin-bottom:14px">
+        <button class="b pri" id="rCheck">زامن مع جيميل الآن</button>
+        <span class="muted" id="rNote"></span>
+      </div>
+      <div id="rDrafts" style="margin-bottom:14px"></div>
+      <div id="rList"></div>
+    </section>
+
+    <!-- ══════════ السجل ══════════ -->
+    <section class="view" id="v-history">
+      <h2>السجل</h2>
+      <p class="sub">كل عملية سجّلها النظام، بترتيب زمني عكسي.</p>
+      <div class="row" style="margin-bottom:12px">
+        <button class="b" id="hRefresh">تحديث</button>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th style="width:14%">التاريخ</th><th style="width:26%">الشركة</th>
+            <th style="width:12%">المرحلة</th><th style="width:12%">الحالة</th>
+            <th>التفاصيل</th>
+          </tr></thead>
+          <tbody id="hBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════ الإعدادات ══════════ -->
+    <section class="view" id="v-settings">
+      <h2>الإعدادات</h2>
+      <p class="sub">كل ما تكتبه هنا يظهر داخل الرسائل مباشرة. التعليقات داخل ملفات YAML محفوظة عند الحفظ.</p>
+
+      <div class="card" style="margin-bottom:14px">
+        <strong>نصوص الرسالة</strong>
+        <div class="grid g2" style="margin-top:14px">
+          <label class="f"><span>التعريف بك — إنجليزي</span><textarea id="f_headline_en"></textarea></label>
+          <label class="f"><span>التعريف بك — عربي</span><textarea id="f_headline_ar"></textarea></label>
+          <label class="f"><span>ما تبحث عنه — إنجليزي</span><textarea id="f_seeking_en"></textarea></label>
+          <label class="f"><span>ما تبحث عنه — عربي</span><textarea id="f_seeking_ar"></textarea></label>
+          <label class="f"><span>المهارات — إنجليزي (سطر لكل مهارة)</span><textarea id="f_skills_en" style="min-height:120px"></textarea></label>
+          <label class="f"><span>المهارات — عربي (سطر لكل مهارة)</span><textarea id="f_skills_ar" style="min-height:120px"></textarea></label>
+          <label class="f"><span>الإنجاز — إنجليزي</span><textarea id="f_achievement_en" style="min-height:110px"></textarea></label>
+          <label class="f"><span>الإنجاز — عربي</span><textarea id="f_achievement_ar" style="min-height:110px"></textarea></label>
+          <label class="f"><span>الجاهزية للعمل — إنجليزي</span><textarea id="f_availability_en"></textarea></label>
+          <label class="f"><span>الجاهزية للعمل — عربي</span><textarea id="f_availability_ar"></textarea></label>
+        </div>
+        <div class="grid g4">
+          <label class="f"><span>المسمّى — إنجليزي</span><input type="text" id="f_title_en"></label>
+          <label class="f"><span>المسمّى — عربي</span><input type="text" id="f_title_ar"></label>
+          <label class="f"><span>الهاتف الأول</span><input type="text" id="f_phone"></label>
+          <label class="f"><span>الهاتف الثاني</span><input type="text" id="f_phone_alt"></label>
+          <label class="f"><span>لينكدإن</span><input type="text" id="f_linkedin"></label>
+          <label class="f"><span>جيت‌هَب</span><input type="text" id="f_github"></label>
+          <label class="f"><span>معرض الأعمال</span><input type="text" id="f_portfolio"></label>
+        </div>
+        <button class="b pri" id="saveProfile">حفظ نصوص الرسالة</button>
+      </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <strong>إيقاع الإرسال</strong>
+        <div class="hint" style="margin-bottom:12px">الإبطاء يقلّل خطر تصنيف رسائلك كسبام. لا تجعل الفاصل ثابتاً.</div>
+        <div class="grid g4">
+          <label class="f"><span>الحد اليومي</span><input type="number" id="s_daily_limit" min="1" max="500"></label>
+          <label class="f"><span>أقل فاصل (ثانية)</span><input type="number" id="s_min_delay_seconds" min="5"></label>
+          <label class="f"><span>أكبر فاصل (ثانية)</span><input type="number" id="s_max_delay_seconds" min="5"></label>
+          <label class="f"><span>حجم الدفعة</span><input type="number" id="s_batch_size" min="1"></label>
+          <label class="f"><span>استراحة الدفعة (ثانية)</span><input type="number" id="s_batch_pause_seconds" min="0"></label>
+          <label class="f"><span>بداية ساعات الإرسال</span><input type="number" id="s_allowed_hours_start" min="0" max="23"></label>
+          <label class="f"><span>نهاية ساعات الإرسال</span><input type="number" id="s_allowed_hours_end" min="1" max="24"></label>
+          <label class="f"><span>أيام المتابعة</span><input type="number" id="s_after_days" min="1" max="60"></label>
+        </div>
+        <button class="b pri" id="saveSettings">حفظ الإيقاع</button>
+      </div>
+
+      <div class="card">
+        <strong>ملفات</strong>
+        <div class="row" style="margin-top:12px">
+          <button class="b" data-open="attachments">مجلد المرفقات (السيرة الذاتية)</button>
+          <button class="b" data-open="config">مجلد الإعدادات</button>
+          <button class="b" data-open="data">مجلد البيانات</button>
+        </div>
+        <div class="hint" style="margin-top:10px">لتغيير السيرة الذاتية، استبدل الملف داخل مجلد المرفقات بنفس الاسم.</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <header>
+    <button class="xbtn" id="dClose" title="إغلاق (Esc)">&times;</button>
+    <div class="who">
+      <b id="dName">—</b>
+      <span id="dEmail" dir="ltr"></span>
+    </div>
+    <span id="dStatus"></span>
+  </header>
+
+  <div class="body">
+    <div class="grid g2">
+      <label class="f"><span>اسم الشركة — يظهر داخل نص الرسالة</span>
+        <input type="text" id="dfCompany"></label>
+      <label class="f"><span>الإيميل</span>
+        <input type="text" id="dfEmail" dir="ltr"></label>
+      <label class="f"><span>اسم جهة الاتصال — يحوّل «تحية طيبة» إلى اسم</span>
+        <input type="text" id="dfContact" placeholder="اتركه فارغاً إن لم تعرفه"></label>
+      <label class="f"><span>الوظيفة في عنوان الرسالة</span>
+        <input type="text" id="dfRole" placeholder="افتراضي: مطوّر برمجيات"></label>
+    </div>
+
+    <label class="f"><span>لغة الرسالة</span>
+      <select id="dfLang">
+        <option value="ar">عربي</option>
+        <option value="en">إنجليزي</option>
+        <option value="both">عربي + إنجليزي (رسالة واحدة بالنسختين)</option>
+      </select>
+    </label>
+
+    <label class="f"><span>ملاحظة مخصصة — أقوى سطر في الرسالة</span>
+      <textarea id="dfNote" style="min-height:90px"
+        placeholder="سطر يخص هذه الشركة وحدها: خبر عنها، منتج أعجبك، سبب اهتمامك بها."></textarea>
+      <div class="hint">اتركها فارغة وستُحذف الفقرة كلياً من الرسالة — لن يظهر فراغ.</div>
+    </label>
+
+    <label class="row" style="gap:8px;cursor:pointer;margin-bottom:14px">
+      <input type="checkbox" id="dfSkip" style="width:auto">
+      <span>تجاوز هذه الشركة (لا ترسل لها)</span>
+    </label>
+
+    <div class="row" style="margin-bottom:8px">
+      <strong style="font-size:13.5px">المعاينة المباشرة</strong>
+      <select id="dStage" style="max-width:150px;margin-inline-start:10px">
+        <option value="initial">الرسالة الأولى</option>
+        <option value="followup">المتابعة</option>
+      </select>
+      <span class="sp mono muted" id="dSubject" style="font-size:12px"></span>
+    </div>
+    <iframe class="mail" id="dFrame" style="height:340px" sandbox=""></iframe>
+  </div>
+
+  <footer>
+    <button class="b pri" id="dSave">حفظ</button>
+    <button class="b" id="dDraft">مسودة لهذه الشركة</button>
+    <button class="b" id="dSend">أرسل لها الآن</button>
+    <span class="sp"></span>
+    <button class="b" id="dPrev" title="السابق">↑</button>
+    <button class="b" id="dNext" title="التالي">↓</button>
+  </footer>
+</aside>
+
+<div class="veil" id="veil"><div class="modal" id="modal"></div></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* يلتقط أي خطأ غير متوقع بدل أن تتوقف الواجهة صامتة */
+window.__err = null;
+window.addEventListener("error", (e) => { window.__err = String(e.message); });
+window.addEventListener("unhandledrejection", (e) => { window.__err = String(e.reason); });
+
+/* ───────────── أدوات مساعدة ───────────── */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
+  (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+let ready = false;
+const queued = [];
+
+async function call(name, ...args) {
+  if (!ready) await new Promise((r) => queued.push(r));
+  const res = await window.pywebview.api[name](...args);
+  if (res && res.ok === false) throw new Error(res.error || "خطأ غير معروف");
+  return res;
+}
+
+function toast(message, kind = "") {
+  const el = document.createElement("div");
+  el.className = "toast " + kind;
+  el.textContent = message;
+  $("#toast").appendChild(el);
+  setTimeout(() => el.remove(), kind === "bd" ? 7000 : 3800);
+}
+
+function modal(html) {
+  $("#modal").innerHTML = html;
+  $("#veil").classList.add("on");
+}
+function closeModal() { $("#veil").classList.remove("on"); }
+$("#veil").addEventListener("click", (e) => { if (e.target.id === "veil") closeModal(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+/* ───────────── التنقّل ───────────── */
+let pendingFilter = "";
+const VIEWS = ["home", "companies", "preview", "send", "replies", "history", "settings"];
+
+function go(view) {
+  $$("nav button[data-v]").forEach((b) => b.classList.toggle("on", b.dataset.v === view));
+  $$(".view").forEach((s) => s.classList.toggle("on", s.id === "v-" + view));
+  if (view === "companies") {
+    loadCompanies().then(() => {
+      if (pendingFilter) { $("#cFilter").value = pendingFilter; pendingFilter = ""; renderCompanies(); }
+    });
+  }
+  if (view === "preview") loadPreviewList();
+  if (view === "history") loadHistory();
+  if (view === "settings") loadSettings();
+  if (view === "send") refreshSendInfo();
+  if (view === "home") loadState();
+}
+$$("nav button[data-v]").forEach((b) => b.addEventListener("click", () => go(b.dataset.v)));
+$$("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
+$$("[data-open]").forEach((b) => b.addEventListener("click", () => call("open_path", b.dataset.open)));
+
+/* ───────────── اختصارات لوحة المفاتيح ───────────── */
+document.addEventListener("keydown", (e) => {
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+
+  if (e.ctrlKey && e.key === "s") {
+    e.preventDefault();
+    if (dirty) saveCompanies();
+    return;
+  }
+  if (e.ctrlKey && e.key >= "1" && e.key <= "7") {
+    e.preventDefault();
+    go(VIEWS[Number(e.key) - 1]);
+    return;
+  }
+  if (e.key === "Escape") {
+    if ($("#drawer").classList.contains("on")) { closeDrawer(); return; }
+    closeModal();
+    return;
+  }
+  if (e.key === "/" && !typing) {
+    e.preventDefault();
+    go("companies");
+    setTimeout(() => $("#cSearch").focus(), 60);
+  }
+  if ($("#drawer").classList.contains("on") && e.altKey) {
+    if (e.key === "ArrowDown") { e.preventDefault(); step(1); }
+    if (e.key === "ArrowUp")   { e.preventDefault(); step(-1); }
+  }
+});
+
+/* تحذير قبل إغلاق النافذة وفيها تعديلات غير محفوظة */
+window.addEventListener("beforeunload", (e) => {
+  if (dirty) { e.preventDefault(); e.returnValue = ""; }
+});
+
+/* ───────────── الحالة ───────────── */
+let STATE = null;
+
+async function loadState() {
+  try {
+    const s = await call("get_state");
+    STATE = s;
+    $("#sTotal").textContent   = s.stats.total;
+    $("#sSent").textContent    = s.stats.initial_sent;
+    $("#sLeft").textContent    = s.stats.remaining;
+    $("#sReplies").textContent = s.stats.replies;
+    $("#brandOwner").textContent = s.owner || "";
+    $("#nCompanies").textContent = s.stats.total;
+    $("#nRemaining").textContent = s.stats.remaining;
+    $("#nReplies").textContent   = s.stats.replies;
+
+    $("#checks").innerHTML = s.checks.map((c) => `
+      <div class="check">
+        <span class="dot ${c.ok ? "ok" : "no"}"></span>
+        <span class="lab">${esc(c.label)}</span>
+        <span class="det">${esc(c.detail)}</span>
+      </div>`).join("");
+
+    $("#readyTag").innerHTML = s.ready
+      ? '<span class="tag ok">جاهز للإرسال</span>'
+      : '<span class="tag bd">غير جاهز</span>';
+
+    $("#acts").innerHTML = s.actions.length ? s.actions.map((a, i) => `
+      <div class="act ${esc(a.kind)}">
+        <div class="txt"><div class="ttl">${esc(a.title)}</div>
+          <div class="bdy">${esc(a.body)}</div></div>
+        <button class="b ${a.kind === "primary" ? "pri" : ""}" data-act="${i}">${esc(a.label)}</button>
+      </div>`).join("")
+      : '<div class="card muted">لا شيء ينتظرك — راسلت كل الشركات ولا متابعات مستحقة.</div>';
+    $$("[data-act]").forEach((b) => b.addEventListener("click", () => {
+      const a = s.actions[b.dataset.act];
+      if (a.filter) pendingFilter = a.filter;
+      if (a.stage) $("#sStage").value = a.stage;
+      go(a.go);
+    }));
+
+    const bits = [];
+    if (s.busy_elsewhere) bits.push("● " + s.busy_elsewhere);
+    if (s.window_error) bits.push("⏰ " + s.window_error);
+    bits.push(`الحد اليومي ${s.daily_limit} — أُرسل ${s.stats.sent_last_24h} خلال 24 ساعة`);
+    if (s.attachments.length) bits.push("المرفق: " + s.attachments.join("، "));
+    $("#homeHint").innerHTML = bits.map(esc).join("<br>");
+  } catch (e) { toast(e.message, "bd"); }
+}
+
+$("#qReplies").addEventListener("click", () => { go("replies"); checkReplies(); });
+$("#qAuth").addEventListener("click", async () => {
+  toast("سيفتح المتصفح لتسجيل الدخول…");
+  try {
+    const r = await call("authenticate");
+    toast(r.matches ? `تم الاتصال بـ ${r.email}` : `تنبيه: سجّلت الدخول بـ ${r.email} وهو مختلف عن الإعدادات`,
+          r.matches ? "ok" : "bd");
+    loadState();
+  } catch (e) { toast(e.message, "bd"); }
+});
+
+/* ───────────── الشركات ───────────── */
+let ROWS = [], dirty = false, picked = new Set(), visible = [];
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/;
+
+function setDirty(on) {
+  dirty = on;
+  $("#cSave").innerHTML = on ? '<span class="dirty-dot"></span>حفظ' : "حفظ";
+  $("#cSave").classList.toggle("pri", on);
+}
+
+async function loadCompanies(force) {
+  if (dirty && !force) { renderCompanies(); return; }
+  try {
+    const r = await call("list_companies");
+    ROWS = r.rows;
+    picked.clear();
+    setDirty(false);
+    renderCompanies();
+    if (r.warnings.length) toast(r.warnings[0]);
+  } catch (e) { toast(e.message, "bd"); }
+}
+
+function matches(row, q, f) {
+  if (q && !(row.company_name + " " + row.email).toLowerCase().includes(q)) return false;
+  if (f === "pending" && (row.blocked || row.skip)) return false;
+  if (f === "nonote" && (row.custom_note.trim() || row.blocked || row.skip)) return false;
+  if (f === "sent" && !row.sent) return false;
+  if (f === "bounced" && !row.bounced) return false;
+  if (f === "skip" && !row.skip) return false;
+  if (f === "replied" && !row.replied) return false;
+  return true;
+}
+
+function renderCompanies() {
+  const q = $("#cSearch").value.trim().toLowerCase();
+  const f = $("#cFilter").value;
+  const body = $("#cBody");
+  body.innerHTML = "";
+  visible = [];
+
+  // عدّ التكرارات حيّاً: الإيميل المكرر يُعلَّم بالأحمر ويُزال عند الحفظ
+  const emailCount = {};
+  ROWS.forEach((r) => {
+    const e = (r.email || "").trim().toLowerCase();
+    if (e) emailCount[e] = (emailCount[e] || 0) + 1;
+  });
+
+  ROWS.forEach((row, i) => {
+    if (!matches(row, q, f)) return;
+    visible.push(i);
+
+    const dup = (emailCount[(row.email || "").trim().toLowerCase()] || 0) > 1;
+    const badEmail = (row.email && !EMAIL_RE.test(row.email)) || dup;
+    const tr = document.createElement("tr");
+    tr.dataset.i = i;
+    tr.className = (row.sent ? "done " : "") + (row.skip ? "off " : "") +
+                   (picked.has(i) ? "sel" : "");
+    tr.innerHTML = `
+      <td class="pick"><input type="checkbox" data-pick="${i}"${picked.has(i) ? " checked" : ""}></td>
+      <td><input type="text" data-i="${i}" data-k="company_name" value="${esc(row.company_name)}"></td>
+      <td><input type="text" data-i="${i}" data-k="email" value="${esc(row.email)}" dir="ltr"
+                 class="${badEmail ? "bad" : ""}"></td>
+      <td><select data-i="${i}" data-k="language">
+            <option value="ar"${row.language === "ar" ? " selected" : ""}>عربي</option>
+            <option value="en"${row.language === "en" ? " selected" : ""}>إنجليزي</option>
+            <option value="both"${row.language === "both" ? " selected" : ""}>عربي + إنجليزي</option>
+          </select></td>
+      <td><input type="text" data-i="${i}" data-k="custom_note" value="${esc(row.custom_note)}"
+                 placeholder="سطر يخص هذه الشركة"></td>
+      <td>${row.replied ? '<span class="tag ok">ردّت</span>'
+           : row.bounced ? '<span class="tag bd">ارتدّت</span>'
+           : row.sent ? '<span class="tag">أُرسلت</span>'
+           : row.drafted ? '<span class="tag wr">مسودة</span>'
+           : row.skip ? '<span class="tag wr">متجاوَزة</span>' : ""}</td>
+      <td><button class="b" data-open-row="${i}" style="padding:4px 10px">تفاصيل</button></td>`;
+    body.appendChild(tr);
+  });
+
+  if (!visible.length) {
+    body.innerHTML = '<tr><td colspan="7"><div class="empty-state">لا نتائج مطابقة لهذا الفلتر.</div></td></tr>';
+  }
+
+  const bad = ROWS.filter((r) => r.email && !EMAIL_RE.test(r.email)).length;
+  const dups = Object.values(emailCount).reduce((n, c) => n + (c > 1 ? c - 1 : 0), 0);
+  $("#cInfo").innerHTML =
+    `${visible.length} معروضة من ${ROWS.length} — ` +
+    `${ROWS.filter((r) => r.sent).length} أُرسلت، ` +
+    `${ROWS.filter((r) => r.skip).length} متجاوَزة، ` +
+    `${ROWS.filter((r) => !r.custom_note.trim() && !r.sent && !r.skip).length} بلا ملاحظة` +
+    (bad ? ` — <span class="tag bd">${bad} إيميل بصيغة خاطئة</span>` : "") +
+    (dups ? ` — <span class="tag bd">${dups} مكرر — سيُزال تلقائياً عند الحفظ</span>` : "");
+
+  $("#cAll").checked = visible.length > 0 && visible.every((i) => picked.has(i));
+  renderBulk();
+}
+
+function renderBulk() {
+  $("#cBulk").classList.toggle("on", picked.size > 0);
+  $("#cBulkN").textContent = `${picked.size} محدّدة`;
+}
+
+$("#cBody").addEventListener("input", (e) => {
+  const el = e.target;
+  if (el.dataset.i === undefined) return;
+  ROWS[el.dataset.i][el.dataset.k] = el.value;
+  setDirty(true);
+  if (el.dataset.k === "email") el.classList.toggle("bad", el.value && !EMAIL_RE.test(el.value));
+});
+$("#cBody").addEventListener("change", (e) => {
+  const el = e.target;
+  if (el.dataset.pick !== undefined) {
+    const i = Number(el.dataset.pick);
+    el.checked ? picked.add(i) : picked.delete(i);
+    el.closest("tr").classList.toggle("sel", el.checked);
+    $("#cAll").checked = visible.length > 0 && visible.every((n) => picked.has(n));
+    renderBulk();
+  } else if (el.dataset.k === "language") {
+    ROWS[el.dataset.i].language = el.value;
+    setDirty(true);
+  }
+});
+$("#cBody").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-open-row]");
+  if (btn) openDrawer(Number(btn.dataset.openRow));
+});
+$("#cAll").addEventListener("change", (e) => {
+  visible.forEach((i) => e.target.checked ? picked.add(i) : picked.delete(i));
+  renderCompanies();
+});
+$("#cSearch").addEventListener("input", renderCompanies);
+$("#cFilter").addEventListener("change", renderCompanies);
+
+$$("[data-bulk]").forEach((b) => b.addEventListener("click", () => {
+  const idx = Array.from(picked);
+  if (!idx.length) return;
+  const op = b.dataset.bulk;
+  if (op === "del") {
+    const locked = idx.filter((i) => ROWS[i].sent);
+    if (locked.length) return toast(`${locked.length} منها أُرسلت بالفعل — لا تُحذف حفاظاً على السجل`, "bd");
+    ROWS = ROWS.filter((_, i) => !picked.has(i));
+  } else if (op === "skip" || op === "unskip") {
+    idx.forEach((i) => ROWS[i].skip = op === "skip");
+  } else {
+    idx.forEach((i) => ROWS[i].language = op);
+  }
+  picked.clear(); setDirty(true); renderCompanies();
+  toast(`طُبّق على ${idx.length} شركة — اضغط حفظ`, "ok");
+}));
+
+$("#cAdd").addEventListener("click", () => {
+  ROWS.unshift({ company_name: "", email: "", contact_name: "", role_target: "",
+                 language: "ar", custom_note: "", website: "", attachments: "",
+                 skip: false, sent: false, replied: false });
+  $("#cSearch").value = ""; $("#cFilter").value = "all";
+  picked.clear(); setDirty(true); renderCompanies();
+  const first = $("#cBody input[data-k=company_name]");
+  if (first) first.focus();
+});
+
+async function saveCompanies() {
+  try {
+    const r = await call("save_companies", ROWS);
+    setDirty(false);
+    if (r.deduped) {
+      const names = (r.removed || []).map((x) => x.company || x.email).join("، ");
+      toast(`حُفظت ${r.count} شركة — أُزيل ${r.deduped} مكرر (${names})`, "ok");
+    } else {
+      toast(`حُفظت ${r.count} شركة`, "ok");
+    }
+    await loadCompanies(true);
+    loadState();
+    return true;
+  } catch (e) { toast(e.message, "bd"); return false; }
+}
+$("#cSave").addEventListener("click", saveCompanies);
+
+/* ───────────── فحص النطاقات (سجلات MX) ───────────── */
+$("#cDns").addEventListener("click", async () => {
+  if (dirty && !(await saveCompanies())) return;
+  const btn = $("#cDns");
+  btn.disabled = true; btn.textContent = "جارٍ الفحص…";
+  try {
+    const r = await call("check_domains");
+    const dead = r.rows.filter((x) => x.state === "no_mx" || x.state === "missing");
+    const unknown = r.rows.filter((x) => x.state === "unknown");
+
+    modal(`
+      <h3>فحص النطاقات</h3>
+      <p class="muted" style="font-size:13px">
+        فُحص ${r.checked} نطاقاً. النطاق بلا سجل بريد (MX) لا يستقبل شيئاً —
+        الإرسال إليه ارتداد مؤكد، والارتداد أخطر إشارة سبام عند جيميل.
+      </p>
+      ${dead.length ? `
+        <div class="row" style="margin:12px 0"><span class="tag bd">${dead.length} عنوان سيرتد حتماً</span></div>
+        <div class="tw" style="max-height:280px">
+          <table><tbody>${dead.map((x) => `
+            <tr><td>${esc(x.company)}</td>
+                <td class="mono" dir="ltr">${esc(x.email)}</td>
+                <td class="muted">${esc(x.detail)}</td></tr>`).join("")}
+          </tbody></table>
+        </div>` : '<div class="row" style="margin:12px 0"><span class="tag ok">كل النطاقات تستقبل بريداً</span></div>'}
+      ${unknown.length ? `<div class="hint" style="margin-top:8px">${unknown.length} نطاق تعذّر فحصه (شبكة) — لم يُحكم عليه.</div>` : ""}
+      <div class="row" style="margin-top:14px">
+        ${dead.length ? '<button class="b pri" id="dnsSkip">تجاوز الميتة تلقائياً</button>' : ""}
+        <button class="b" onclick="document.getElementById('veil').classList.remove('on')">إغلاق</button>
+      </div>`);
+
+    const skipBtn = $("#dnsSkip");
+    if (skipBtn) skipBtn.addEventListener("click", async () => {
+      skipBtn.disabled = true; skipBtn.textContent = "جارٍ…";
+      try {
+        const s = await call("skip_dead_domains");
+        closeModal();
+        toast(`عُلّم ${s.marked} عنواناً بالتجاوز — لن تُرسل إليها`, "ok");
+        await loadCompanies(true); loadState();
+      } catch (e) { toast(e.message, "bd"); }
+    });
+  } catch (e) { toast(e.message, "bd"); }
+  finally { btn.disabled = false; btn.textContent = "افحص النطاقات"; }
+});
+
+/* ───────────── لوح تفاصيل الشركة ───────────── */
+let dIndex = -1, dTimer = null;
+
+const D = { company: "#dfCompany", email: "#dfEmail", contact: "#dfContact",
+            role: "#dfRole", lang: "#dfLang", note: "#dfNote", skip: "#dfSkip" };
+
+function openDrawer(i) {
+  if (i < 0 || i >= ROWS.length) return;
+  dIndex = i;
+  const r = ROWS[i];
+  $("#dName").textContent = r.company_name || "(بلا اسم)";
+  $("#dEmail").textContent = r.email;
+  $("#dStatus").innerHTML = r.replied ? '<span class="tag ok">ردّت</span>'
+    : r.bounced ? '<span class="tag bd">ارتدّت — صحّح الإيميل</span>'
+    : r.sent ? `<span class="tag">أُرسلت ${esc(r.sent_at || "")}</span>`
+    : r.drafted ? '<span class="tag wr">لها مسودة في جيميل</span>'
+    : r.skip ? '<span class="tag wr">متجاوَزة</span>' : '<span class="tag">لم تُرسل</span>';
+
+  $(D.company).value = r.company_name;
+  $(D.email).value   = r.email;
+  $(D.contact).value = r.contact_name;
+  $(D.role).value    = r.role_target;
+  $(D.lang).value    = r.language;
+  $(D.note).value    = r.custom_note;
+  $(D.skip).checked  = r.skip;
+
+  const locked = r.blocked || r.skip;
+  $("#dSend").disabled = locked;
+  $("#dDraft").disabled = locked;
+  $("#dSend").title = locked
+    ? (r.skip ? "متجاوَزة — ألغِ التجاوز أولاً" : "تواصلت معها بالفعل — لن يرسل النظام مرتين")
+    : "";
+
+  $("#drawer").classList.add("on");
+  $("#drawer").setAttribute("aria-hidden", "false");
+  $("#scrim").classList.add("on");
+  drawerPreview();
+  setTimeout(() => $(D.note).focus(), 220);
+}
+
+function closeDrawer() {
+  pullDrawer();
+  $("#drawer").classList.remove("on");
+  $("#drawer").setAttribute("aria-hidden", "true");
+  $("#scrim").classList.remove("on");
+  dIndex = -1;
+  renderCompanies();
+}
+
+function pullDrawer() {
+  if (dIndex < 0) return;
+  const r = ROWS[dIndex];
+  const next = {
+    company_name: $(D.company).value, email: $(D.email).value,
+    contact_name: $(D.contact).value, role_target: $(D.role).value,
+    language: $(D.lang).value, custom_note: $(D.note).value,
+    skip: $(D.skip).checked,
+  };
+  if (Object.keys(next).some((k) => r[k] !== next[k])) {
+    Object.assign(r, next);
+    setDirty(true);
+  }
+}
+
+async function drawerPreview() {
+  if (dIndex < 0) return;
+  const row = {
+    company_name: $(D.company).value, email: $(D.email).value,
+    contact_name: $(D.contact).value, role_target: $(D.role).value,
+    language: $(D.lang).value, custom_note: $(D.note).value,
+  };
+  try {
+    const r = await call("preview_row", row, $("#dStage").value);
+    $("#dSubject").textContent = r.subject;
+    $("#dFrame").srcdoc =
+      `<!doctype html><meta charset="utf-8"><body style="margin:0;padding:20px;background:#fff">${r.html}</body>`;
+  } catch (e) { $("#dSubject").textContent = e.message; }
+}
+
+Object.values(D).forEach((sel) => {
+  $(sel).addEventListener("input", () => {
+    pullDrawer();
+    clearTimeout(dTimer);
+    dTimer = setTimeout(drawerPreview, 260);
+  });
+});
+$(D.lang).addEventListener("change", drawerPreview);
+$("#dStage").addEventListener("change", drawerPreview);
+$("#dClose").addEventListener("click", closeDrawer);
+$("#scrim").addEventListener("click", closeDrawer);
+
+$("#dSave").addEventListener("click", async () => { pullDrawer(); await saveCompanies(); });
+
+function step(delta) {
+  pullDrawer();
+  const at = visible.indexOf(dIndex);
+  const next = visible[(at + delta + visible.length) % visible.length];
+  if (next !== undefined) openDrawer(next);
+}
+$("#dPrev").addEventListener("click", () => step(-1));
+$("#dNext").addEventListener("click", () => step(1));
+
+async function sendOne(mode) {
+  pullDrawer();
+  const row = ROWS[dIndex];
+  if (dirty && !(await saveCompanies())) return;
+  const verb = mode === "draft" ? "إنشاء مسودة" : "إرسال";
+  if (mode === "send" && !confirm(`${verb} إلى ${row.company_name} <${row.email}>؟\nلا يمكن التراجع.`)) return;
+  try {
+    await call("start_campaign", "initial", mode, 1, true, row.email);
+    toast(`${verb} جارٍ…`);
+    closeDrawer(); go("send"); planned = 1; $("#sLog").innerHTML = ""; startPolling();
+  } catch (e) { toast(e.message, "bd"); }
+}
+$("#dSend").addEventListener("click", () => sendOne("send"));
+$("#dDraft").addEventListener("click", () => sendOne("draft"));
+
+$("#cImport").addEventListener("click", () => {
+  modal(`
+    <h3>لصق قائمة إيميلات</h3>
+    <p class="muted" style="font-size:13px">سطر لكل إيميل. يقبل «اسم الشركة، إيميل» أو الإيميل وحده أو قائمة مرقّمة.</p>
+    <textarea id="impText" style="min-height:180px" dir="ltr"></textarea>
+    <label class="f" style="margin-top:12px"><span>لغة الرسالة لهذه الدفعة</span>
+      <select id="impLang">
+        <option value="ar">عربي</option>
+        <option value="en">إنجليزي</option>
+        <option value="both">عربي + إنجليزي</option>
+      </select>
+    </label>
+    <div class="row"><button class="b pri" id="impGo">إضافة</button>
+      <button class="b" onclick="document.getElementById('veil').classList.remove('on')">إلغاء</button></div>`);
+  $("#impGo").addEventListener("click", async () => {
+    try {
+      const r = await call("import_emails", $("#impText").value, $("#impLang").value);
+      ROWS = r.added.concat(ROWS);
+      renderCompanies(); closeModal();
+      toast(`أُضيفت ${r.added.length}${r.duplicates ? ` — تُجوهل ${r.duplicates} مكرر` : ""}. اضغط «حفظ التغييرات».`, "ok");
+    } catch (e) { toast(e.message, "bd"); }
+  });
+});
+
+/* ───────────── المعاينة ───────────── */
+async function loadPreviewList() {
+  if (!ROWS.length) { try { ROWS = (await call("list_companies")).rows; } catch { /* تُعالج أدناه */ } }
+  const sel = $("#pCompany");
+  const keep = sel.value;
+  sel.innerHTML = ROWS.map((r) => `<option value="${esc(r.email)}">${esc(r.company_name)} — ${esc(r.email)}</option>`).join("");
+  if (keep) sel.value = keep;
+  doPreview();
+}
+
+async function doPreview() {
+  try {
+    const r = await call("preview", $("#pCompany").value, $("#pStage").value);
+    $("#pTo").textContent = r.to;
+    $("#pSubject").textContent = r.subject;
+    $("#pAttach").innerHTML = r.attachments.map((a) =>
+      `<span class="tag ${a.missing ? "bd" : ""}">${esc(a.name)}${a.missing ? " — مفقود" : ` · ${a.kb} KB`}</span>`).join(" ");
+    $("#pFrame").srcdoc =
+      `<!doctype html><meta charset="utf-8"><body style="margin:0;padding:22px;background:#fff">${r.html}</body>`;
+  } catch (e) { toast(e.message, "bd"); }
+}
+$("#pCompany").addEventListener("change", doPreview);
+$("#pStage").addEventListener("change", doPreview);
+$("#pRefresh").addEventListener("click", doPreview);
+
+/* ───────────── الإرسال ───────────── */
+let polling = null, planned = 0;
+
+async function refreshSendInfo() {
+  try {
+    const lim = parseInt($("#sLimit").value, 10);
+    const p = await call("preflight", $("#sStage").value, $("#sMode").value,
+                          Number.isFinite(lim) ? lim : null, $("#sIgnore").checked);
+    const bits = [];
+    bits.push(`<div class="row"><span>مؤهّلة للإرسال</span><span class="sp mono">${p.planned}</span></div>`);
+    bits.push(`<div class="row"><span>ستُرسل الآن</span><span class="sp mono">${p.will_send}</span></div>`);
+    if (p.eta_minutes) bits.push(`<div class="row"><span>المدة المتوقعة</span><span class="sp mono">~${p.eta_minutes} دقيقة</span></div>`);
+    bits.push(`<div class="row"><span>أُرسل خلال 24 ساعة</span><span class="sp mono">${p.sent_last_24h}</span></div>`);
+    if (p.window_error) bits.push(`<div style="margin-top:8px"><span class="tag wr">${esc(p.window_error)}</span></div>`);
+    if (p.busy_elsewhere) bits.push(`<div style="margin-top:8px"><span class="tag bd">${esc(p.busy_elsewhere)}</span></div>`);
+
+    const risks = p.risks || [];
+    if (risks.length) {
+      const RK = { high: "bd", med: "wr", low: "" };
+      bits.push('<div style="margin-top:12px;border-top:1px solid var(--rule);padding-top:10px">'
+        + '<strong style="font-size:13px">فحص خطر السبام</strong>'
+        + risks.map((r) => `
+          <div style="margin-top:8px">
+            <span class="tag ${RK[r.level] || ""}">${esc(r.title)}</span>
+            <div class="hint" style="margin-top:3px">${esc(r.advice)}</div>
+          </div>`).join("")
+        + "</div>");
+    } else {
+      bits.push('<div style="margin-top:10px"><span class="tag ok">فحص خطر السبام: لا ملاحظات</span></div>');
+    }
+
+    $("#sInfo").innerHTML = bits.join("");
+    $("#sStart").disabled = p.will_send === 0 || Boolean(p.busy_elsewhere);
+  } catch (e) { $("#sInfo").innerHTML = `<span class="tag bd">${esc(e.message)}</span>`; }
+}
+["sStage", "sMode", "sLimit", "sIgnore"].forEach((id) =>
+  $("#" + id).addEventListener("change", refreshSendInfo));
+
+$("#sStart").addEventListener("click", async () => {
+  const lim = parseInt($("#sLimit").value, 10);
+  const limit = Number.isFinite(lim) ? lim : null;
+  const mode = $("#sMode").value, stage = $("#sStage").value;
+  const ignore = $("#sIgnore").checked;
+
+  let p;
+  try { p = await call("preflight", stage, mode, limit, ignore); }
+  catch (e) { return toast(e.message, "bd"); }
+
+  if (p.window_error) return toast(p.window_error + " — فعّل «تجاهل القيود» إن أردت المتابعة", "bd");
+  if (!p.will_send) return toast("لا توجد رسائل للإرسال", "bd");
+
+  const verb = mode === "draft" ? "إنشاء مسودة" : "إرسال";
+  modal(`
+    <h3>تأكيد ${esc(verb)}</h3>
+    <p class="muted" style="font-size:13px">
+      ${p.will_send} رسالة${p.eta_minutes ? ` — نحو ${p.eta_minutes} دقيقة` : ""}.
+      ${mode === "send" ? "الإرسال نهائي ولا يمكن التراجع عنه." : "لن تُرسل — ستُحفظ كمسودات في جيميل."}
+    </p>
+    <div class="tw" style="max-height:250px;margin:12px 0">
+      <table><tbody>${p.targets.map((t) => `
+        <tr><td>${esc(t.company)}</td><td class="mono" dir="ltr">${esc(t.email)}</td>
+        <td><span class="tag">${t.language === "ar" ? "عربي" : "إنجليزي"}</span></td></tr>`).join("")}
+      </tbody></table>
+    </div>
+    <div class="row">
+      <button class="b pri" id="okGo">نعم، ${esc(verb)}</button>
+      <button class="b" onclick="document.getElementById('veil').classList.remove('on')">إلغاء</button>
+    </div>`);
+
+  $("#okGo").addEventListener("click", async () => {
+    closeModal();
+    planned = p.will_send;
+    try {
+      await call("start_campaign", stage, mode, limit, ignore);
+      $("#sStart").disabled = true; $("#sStop").disabled = false;
+      $("#sLog").innerHTML = "";
+      startPolling();
+    } catch (e) { toast(e.message, "bd"); }
+  });
+});
+
+$("#sStop").addEventListener("click", async () => {
+  await call("stop_campaign");
+  $("#sStop").disabled = true;
+});
+
+function startPolling() {
+  if (polling) clearInterval(polling);
+  polling = setInterval(async () => {
+    let r;
+    try { r = await call("poll"); } catch { return; }
+
+    const log = $("#sLog");
+    const atEnd = log.scrollTop + log.clientHeight >= log.scrollHeight - 40;
+    log.innerHTML = r.lines.length
+      ? r.lines.map((l) => `<div class="ln ${l.kind}"><span class="t">${esc(l.time)}</span><span class="m">${esc(l.text)}</span></div>`).join("")
+      : '<div class="empty">جارٍ التحضير…</div>';
+    if (atEnd) log.scrollTop = log.scrollHeight;
+
+    const done = r.lines.filter((l) => l.kind === "ok" || l.kind === "err").length;
+    $("#sProgress").textContent = planned ? `${done} / ${planned}` : "";
+    $("#sBar").style.width = planned ? `${Math.min(100, (done / planned) * 100)}%` : "0";
+
+    if (!r.running) {
+      clearInterval(polling); polling = null;
+      $("#sStart").disabled = false; $("#sStop").disabled = true;
+      if (r.summary) {
+        const s = r.summary;
+        toast(`انتهت: نجحت ${s.succeeded}، فشلت ${s.failed}${s.stopped_reason ? " — " + s.stopped_reason : ""}`,
+              s.failed ? "bd" : "ok");
+      }
+      loadState(); refreshSendInfo();
+    }
+  }, 700);
+}
+
+/* ───────────── الردود ───────────── */
+async function checkReplies() {
+  $("#rNote").textContent = "جارٍ المزامنة…";
+  $("#rCheck").disabled = true;
+  try {
+    const r = await call("check_replies");
+    $("#rNote").textContent = r.note || `${r.replies.length} ردّ (جديد: ${r.new})`;
+
+    const D_LABEL = {
+      sent:    ['ok', "أُرسلت يدوياً"],
+      deleted: ['bd', "حُذفت المسودة — عادت الشركة مؤهلة للإرسال"],
+      waiting: ['wr', "ما زالت مسودة في جيميل"],
+    };
+    const drafts = r.drafts || [];
+    $("#rDrafts").innerHTML = drafts.length ? `
+      <div class="card">
+        <strong style="display:block;margin-bottom:8px">مصير المسودات</strong>
+        ${drafts.map((d) => {
+          const [k, label] = D_LABEL[d.state] || ["", d.state];
+          return `<div class="check">
+            <span class="lab">${esc(d.company)}</span>
+            <span class="det"><span class="tag ${k}">${esc(label)}</span>
+              ${d.at ? `<span class="mono muted" style="margin-inline-start:8px">${esc(d.at)}</span>` : ""}</span>
+          </div>`;
+        }).join("")}
+      </div>` : "";
+
+    const sentNow = drafts.filter((d) => d.state === "sent").length;
+    if (sentNow) toast(`تحدّث وضع ${sentNow} مسودة إلى «أُرسلت يدوياً»`, "ok");
+
+    const bounces = r.bounces || [];
+    const bounceBlock = bounces.length ? `
+      <div class="card" style="margin-bottom:10px">
+        <strong style="display:block;margin-bottom:4px">
+          <span class="tag bd">${bounces.length} رسالة ارتدّت</span>
+          عناوين غير صالحة — ليست ردوداً
+        </strong>
+        <div class="hint" style="margin-bottom:8px">صحّح الإيميل من قسم الشركات وسيُعاد إرسالها في الحملة القادمة.</div>
+        ${bounces.map((x) => `<div class="check">
+          <span class="lab">${esc(x.company)}</span>
+          <span class="det mono" dir="ltr">${esc(x.email)}</span>
+        </div>`).join("")}
+      </div>` : "";
+
+    $("#rList").innerHTML = bounceBlock + (r.replies.length
+      ? r.replies.map((x) => `
+          <div class="card" style="margin-bottom:10px">
+            <div class="row"><strong>${esc(x.company)}</strong>
+              <span class="sp mono muted" dir="ltr">${esc(x.email)}</span></div>
+            <div class="muted" style="margin-top:6px">${esc(x.snippet)}</div>
+          </div>`).join("")
+      : '<div class="card muted">لا توجد ردود بشرية بعد.</div>');
+    loadState();
+  } catch (e) { $("#rNote").textContent = ""; toast(e.message, "bd"); }
+  finally { $("#rCheck").disabled = false; }
+}
+$("#rCheck").addEventListener("click", checkReplies);
+
+/* ───────────── السجل ───────────── */
+async function loadHistory() {
+  try {
+    const r = await call("get_history", 80);
+    $("#hBody").innerHTML = r.rows.length ? r.rows.map((x) => {
+      const tag = x.status === "sent" ? "ok"
+        : (x.status === "failed" || x.status === "bounced") ? "bd" : "";
+      const label = { sent: "أُرسلت", failed: "فشلت", drafted: "مسودة",
+                      deleted: "حُذفت المسودة", bounced: "ارتدّت" }[x.status] || x.status;
+      return `<tr>
+        <td class="mono">${esc(x.at)}</td><td>${esc(x.company)}</td>
+        <td>${x.stage === "initial" ? "أولى" : "متابعة"}</td>
+        <td><span class="tag ${tag}">${esc(label)}</span></td>
+        <td class="muted">${esc(x.error || x.subject)}</td></tr>`;
+    }).join("") : '<tr><td colspan="5" class="muted">السجل فارغ.</td></tr>';
+  } catch (e) { toast(e.message, "bd"); }
+}
+$("#hRefresh").addEventListener("click", loadHistory);
+
+/* ───────────── الإعدادات ───────────── */
+const TEXT_FIELDS = ["headline_en", "headline_ar", "seeking_en", "seeking_ar",
+  "achievement_en", "achievement_ar", "availability_en", "availability_ar",
+  "title_en", "title_ar", "phone", "phone_alt", "linkedin", "github", "portfolio"];
+const SEND_FIELDS = ["daily_limit", "min_delay_seconds", "max_delay_seconds",
+  "batch_size", "batch_pause_seconds", "allowed_hours_start", "allowed_hours_end"];
+
+async function loadSettings() {
+  try {
+    const r = await call("get_profile");
+    TEXT_FIELDS.forEach((k) => { const el = $("#f_" + k); if (el) el.value = r.profile[k] ?? ""; });
+    $("#f_skills_en").value = (r.profile.skills_en || []).join("\n");
+    $("#f_skills_ar").value = (r.profile.skills_ar || []).join("\n");
+    SEND_FIELDS.forEach((k) => { const el = $("#s_" + k); if (el) el.value = r.sending[k] ?? ""; });
+    $("#s_after_days").value = r.followup.after_days ?? 7;
+  } catch (e) { toast(e.message, "bd"); }
+}
+
+$("#saveProfile").addEventListener("click", async () => {
+  const values = {};
+  TEXT_FIELDS.forEach((k) => { const el = $("#f_" + k); if (el) values[k] = el.value.trim(); });
+  values.skills_en = $("#f_skills_en").value.split("\n").map((s) => s.trim()).filter(Boolean);
+  values.skills_ar = $("#f_skills_ar").value.split("\n").map((s) => s.trim()).filter(Boolean);
+  try {
+    await call("save_profile", values);
+    toast("حُفظت نصوص الرسالة", "ok");
+    loadState();
+  } catch (e) { toast(e.message, "bd"); }
+});
+
+$("#saveSettings").addEventListener("click", async () => {
+  const sending = {};
+  SEND_FIELDS.forEach((k) => {
+    const v = parseInt($("#s_" + k).value, 10);
+    if (Number.isFinite(v)) sending[k] = v;
+  });
+  if (sending.min_delay_seconds > sending.max_delay_seconds)
+    return toast("أقل فاصل يجب أن يكون أصغر من أكبر فاصل", "bd");
+  const after = parseInt($("#s_after_days").value, 10);
+  try {
+    await call("save_settings", sending, Number.isFinite(after) ? { after_days: after } : {});
+    toast("حُفظ الإيقاع", "ok");
+    loadState();
+  } catch (e) { toast(e.message, "bd"); }
+});
+
+/* ───────────── الوضع الليلي ───────────── */
+function applyTheme(mode) {
+  if (mode) document.documentElement.setAttribute("data-theme", mode);
+  else document.documentElement.removeAttribute("data-theme");
+  const dark = mode === "dark" ||
+    (!mode && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  $("#themeBtn").textContent = dark ? "الوضع النهاري" : "الوضع الليلي";
+}
+$("#themeBtn").addEventListener("click", () => {
+  const now = document.documentElement.getAttribute("data-theme");
+  const dark = now === "dark" ||
+    (!now && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const next = dark ? "light" : "dark";
+  try { localStorage.setItem("theme", next); } catch { /* لا يمنع التبديل */ }
+  applyTheme(next);
+});
+try { applyTheme(localStorage.getItem("theme")); } catch { applyTheme(null); }
+
+/* ───────────── الإقلاع ───────────── */
+window.addEventListener("pywebviewready", () => {
+  ready = true;
+  queued.splice(0).forEach((r) => r());
+  loadState();
+});
+</script>
+</body>
+</html>

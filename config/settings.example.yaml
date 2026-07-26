@@ -1,0 +1,63 @@
+# ============================================================
+#  System settings. Edit these — no code changes needed.
+#  إعدادات النظام. عدّلها هنا — لا حاجة لتعديل الكود.
+# ============================================================
+
+sender:
+  # Name shown in the recipient's "From" field
+  # الاسم الذي يظهر للمستقبِل في خانة "From"
+  display_name_en: "TODO: Your Name"
+  display_name_ar: "TODO: اسمك"
+  # Must match the Google account you authenticate with
+  # يجب أن يطابق حساب جوجل الذي تسجّل الدخول به
+  email: "TODO: you@gmail.com"
+  reply_to: ""      # empty = same as above / فارغ = نفس الإيميل أعلاه
+
+sending:
+  # Gmail allows ~500/day, but slow sending is what keeps you out of spam.
+  # جيميل يسمح بـ 500 يومياً، لكن الإرسال البطيء هو ما يبقيك خارج السبام.
+  daily_limit: 40
+
+  # Random gap between messages. The randomness matters: a fixed interval
+  # is itself a machine signature.
+  # فاصل عشوائي بين الرسائل. العشوائية مهمة: الفاصل الثابت نمط آلي مكشوف.
+  min_delay_seconds: 45
+  max_delay_seconds: 120
+
+  # Longer pause after every N messages
+  # استراحة أطول بعد كل N رسالة
+  batch_size: 10
+  batch_pause_seconds: 300
+
+  # Allowed sending hours (24h). Set both to null to disable.
+  # ساعات الإرسال المسموحة. اجعلهما null لتعطيل القيد.
+  allowed_hours_start: 8
+  allowed_hours_end: 18
+  # Weekdays to skip (0=Monday … 6=Sunday). Default: Friday & Saturday.
+  # أيام ممنوع الإرسال فيها (0=الاثنين … 6=الأحد). الافتراضي: الجمعة والسبت.
+  skip_weekdays: [4, 5]
+
+followup:
+  enabled: true
+  after_days: 7
+  # Don't exceed 2 — more than that is pestering
+  # لا تتجاوز 2 — أكثر من ذلك إزعاج
+  max_followups: 1
+  skip_if_replied: true
+
+attachments:
+  # Sent with every email. Override per-company via the CSV column.
+  # تُرسل مع كل رسالة. يمكن تجاوزها لكل شركة عبر عمود CSV.
+  default:
+    - "attachments/CV.pdf"
+  # Gmail rejects anything over 25 MB
+  # جيميل يرفض أكثر من 25 ميجابايت
+  max_total_mb: 20
+
+paths:
+  companies_csv: "data/companies.csv"
+  database: "data/outreach.db"
+  templates_dir: "templates"
+  previews_dir: "previews"
+  credentials: "config/credentials.json"
+  token: "config/token.json"

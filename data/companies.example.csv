@@ -1,0 +1,5 @@
+company_name,email,contact_name,role_target,language,custom_note,website,attachments,skip
+Acme Technologies,careers@acme-example.com,Sarah,Backend Internship,en,I've been following your work on the open-source payments SDK and would love to contribute to it.,https://acme-example.com,,
+شركة نور للتقنية,hr@noor-example.com,أحمد,تدريب تعاوني - تطوير برمجيات,ar,تابعت مشاركتكم في معرض ليب هذا العام وأعجبني تركيزكم على الأنظمة السحابية.,https://noor-example.com,,
+Beta Labs,jobs@beta-example.com,,Software Engineering Internship,en,,https://beta-example.com,attachments/CV.pdf;attachments/Portfolio.pdf,
+Gamma Corp,info@gamma-example.com,,,en,,,,1

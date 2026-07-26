@@ -1,0 +1,79 @@
+# ============================================================
+#  Your profile — every field here appears inside your emails.
+#  ملفك الشخصي — كل حقل هنا يظهر داخل رسائلك.
+#
+#  Templates reference these as {{ me.<field> }}
+#  القوالب تستدعيها هكذا: {{ me.full_name_en }}
+#
+#  ⚠️  Any value still starting with TODO blocks sending.
+#      أي قيمة تبدأ بـ TODO تمنع الإرسال حتى تُملأ.
+# ============================================================
+
+full_name_en: "TODO: Your Full Name"
+full_name_ar: "TODO: اسمك الكامل"
+
+# Job title — appears in your signature and as the default email subject role
+# المسمّى المهني — يظهر في التوقيع وكمسمّى افتراضي في عنوان الرسالة
+title_en: "TODO: e.g. Software Developer"
+title_ar: "TODO: مثال: مطوّر برمجيات"
+
+# One-line intro. This is the first sentence the recipient reads.
+# التعريف بك في سطر واحد — أول جملة يقرأها المستقبِل.
+headline_en: "TODO: e.g. a 2026 Computer Science graduate of X University who builds mobile and web apps"
+headline_ar: "TODO: مثال: خريج علوم حاسب 2026 من جامعة X، أطوّر تطبيقات الموبايل والويب"
+
+university_en: "TODO: e.g. X University"
+university_ar: "TODO: مثال: جامعة X"
+major_en: "TODO: e.g. Computer Science"
+major_ar: "TODO: مثال: علوم الحاسب"
+graduation_year: "TODO: 2026"
+# Leave empty if you already graduated
+# اتركها فارغة إن كنت متخرجاً
+academic_year_en: ""
+academic_year_ar: ""
+
+# 3–6 skills. Concrete and verifiable beats generic adjectives.
+# ٣–٦ مهارات. الملموس القابل للتحقق أقوى من الصفات العامة.
+skills_en:
+  - "TODO: e.g. Flutter & Dart for cross-platform mobile apps"
+  - "TODO: e.g. Next.js, React and TypeScript for production web platforms"
+  - "TODO: e.g. Docker and GitHub Actions CI/CD"
+skills_ar:
+  - "TODO: مثال: تطوير تطبيقات الموبايل بـ Flutter وDart"
+  - "TODO: مثال: بناء منصات ويب بـ Next.js وReact وTypeScript"
+  - "TODO: مثال: النشر الآلي عبر Docker وGitHub Actions"
+
+# The strongest line in the whole email: one specific, measurable achievement.
+# أقوى سطر في الرسالة كلها: إنجاز واحد محدد وقابل للقياس.
+#   ✗ "I have good experience in web development"
+#   ✓ "I shipped X.com, an e-commerce platform serving 500 monthly users"
+achievement_en: "TODO: one specific, measurable accomplishment"
+achievement_ar: "TODO: إنجاز واحد محدد وقابل للقياس"
+
+# What you're asking for. Keeping it open stops a company from dismissing you
+# just because their opening has a slightly different title.
+# ما تطلبه. إبقاؤه مفتوحاً يمنع رفضك لمجرد اختلاف مسمّى الشاغر قليلاً.
+seeking_en: "TODO: e.g. a software developer — full-time or an internship — or any similar role that fits my background"
+seeking_ar: "TODO: مثال: وظيفة أو فرصة تدريب في تطوير البرمجيات، أو أي دور مشابه يناسب خبرتي"
+
+# Short form used in follow-up emails (the long one reads badly there)
+# صيغة مختصرة لرسالة المتابعة (الطويلة تُقرأ ركيكة هناك)
+seeking_short_en: "TODO: e.g. a software developer role"
+seeking_short_ar: "TODO: مثال: وظيفة مطوّر برمجيات"
+
+# Availability + work authorization. Stating you need no sponsorship removes
+# the biggest obstacle for many employers — say so if it applies to you.
+# الجاهزية والوضع النظامي. ذكر أنك لا تحتاج كفالة يزيل أكبر عائق أمام
+# صاحب العمل — اذكره إن كان ينطبق عليك.
+availability_en: "TODO: e.g. I'm available to start immediately, full-time — on-site, hybrid or remote"
+availability_ar: "TODO: مثال: متاح للبدء فوراً بدوام كامل، حضورياً أو هجيناً أو عن بُعد"
+
+# ─── Contact details ────────────────────────────────────────────────────
+email: "TODO: you@example.com"
+phone: "TODO: +000 00 000 0000"
+phone_alt: ""                 # optional second number / رقم ثانٍ اختياري
+city_en: "TODO: City, Country"
+city_ar: "TODO: المدينة، الدولة"
+linkedin: "TODO: https://linkedin.com/in/..."
+github: ""                    # leave empty to hide / اتركه فارغاً ليُخفى
+portfolio: ""                 # leave empty to hide / اتركه فارغاً ليُخفى

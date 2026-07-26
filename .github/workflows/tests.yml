@@ -1,0 +1,30 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        # pywebview is desktop-only and not needed by the offline suite
+        run: |
+          python -m pip install --upgrade pip
+          pip install $(grep -v -E '^(pywebview|#|$)' requirements.txt) pytest
+
+      - name: Run tests
+        run: python -m pytest tests/ -v

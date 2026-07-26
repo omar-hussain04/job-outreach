@@ -1,0 +1,35 @@
+# ─── Secrets — never commit these ───────────────────────────────────────
+# أسرار — لا تُرفع أبداً
+config/credentials.json
+config/client_secret*.json
+config/token.json
+.env
+
+# ─── Your personal config (copy from the .example files) ────────────────
+# إعداداتك الشخصية — انسخها من ملفات .example
+config/profile.yaml
+config/settings.yaml
+
+# ─── Personal data: CV, contact list, send history, previews ────────────
+# بيانات شخصية: السيرة الذاتية، قائمة الشركات، سجل الإرسال، المعاينات
+attachments/*
+!attachments/.gitkeep
+data/*.db
+data/*.csv
+!data/companies.example.csv
+data/campaign.lock
+data/app_error.log
+previews/
+
+# ─── Python ─────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# ─── Editors / OS ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp

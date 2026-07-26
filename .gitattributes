@@ -1,0 +1,10 @@
+# Normalise line endings so the repo stays clean across Windows/macOS/Linux
+* text=auto eol=lf
+
+# Windows launchers must keep CRLF or wscript may misparse them
+*.vbs text eol=crlf
+
+# Binary — never touch
+*.ico binary
+*.pdf binary
+*.db  binary
